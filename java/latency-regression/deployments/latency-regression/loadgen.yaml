@@ -1,0 +1,46 @@
+# Steady /checkout traffic: 70% small carts (1-20 items), 30% large (150-400).
+# Sizes follow a fixed rotation rather than $RANDOM so runs are repeatable.
+# Rate is roughly RATE requests per second (sequential; slow responses lower it).
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: latency-regression-loadgen
+  labels:
+    app: latency-regression-loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: latency-regression-loadgen
+  template:
+    metadata:
+      labels:
+        app: latency-regression-loadgen
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: curl
+          image: curlimages/curl:8.4.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BASE_URL
+              value: http://latency-regression:8080
+            - name: RATE
+              value: "10"
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -u
+              until curl -sf "${BASE_URL}/health" >/dev/null; do sleep 2; done
+              pause=$$(awk "BEGIN { printf \"%.3f\", 1 / ${RATE} }")
+              i=0
+              while true; do
+                if [ $$((i % 10)) -lt 7 ]; then
+                  items=$$((1 + (i * 7) % 20))
+                else
+                  items=$$((150 + (i * 37) % 251))
+                fi
+                curl -s -o /dev/null "${BASE_URL}/checkout?items=${items}" || true
+                i=$$((i + 1))
+                sleep "${pause}"
+              done

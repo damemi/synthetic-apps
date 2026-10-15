@@ -20,6 +20,7 @@ synthetic applications used for testing, developing and evaluating odigos
 - `versionminimum`: The minimum version of Java supported by the build system.
 - `envdockerfile`: Set JAVA options in Dockerfile.
 - `envmanifest`: Set JAVA options in manifest.
+- `latency-regression`: Spring Boot checkout service with a runtime-toggleable on-CPU latency regression, plus a steady load generator, for testing latency detection and interrogation (`java/latency-regression`).
 
 > **Note:** Java 8, released in 2014, is the minimum version supported by OpenTelemetry. Creating applications with older Java versions is not practical or supported, so only Java 8 and newer are included here.
 
